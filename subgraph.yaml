@@ -1,4 +1,4 @@
-specVersion: 0.0.1
+specVersion: 0.0.2
 schema:
   file: ./schema.graphql
 dataSources:
@@ -8,19 +8,39 @@ dataSources:
     source:
       address: "0xe4C5Cf259351d7877039CBaE0e7f92EB2Ab017EB"
       abi: ConveyorV2Router01
+      startBlock: 11590014
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.5
       language: wasm/assemblyscript
       entities:
-        - MetaStatus
-        - OwnershipTransferred
+        - MetaTransaction
+        - User
       abis:
         - name: ConveyorV2Router01
           file: ./abis/ConveyorV2Router01.json
+        - name: ERC20
+          file: ./abis/ERC20.json
       eventHandlers:
         - event: MetaStatus(address,bool,string)
           handler: handleMetaStatus
-        - event: OwnershipTransferred(indexed address,indexed address)
-          handler: handleOwnershipTransferred
       file: ./src/mapping.ts
+templates:
+  - kind: ethereum/contract
+    name: ERC20
+    network: bsc
+    source:
+      abi: ERC20
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.5
+      language: wasm/assemblyscript
+      file: ./src/mapping.ts
+      entities:
+        - MetaTransaction
+      abis:
+        - name: ERC20
+          file: ./abis/ERC20.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer

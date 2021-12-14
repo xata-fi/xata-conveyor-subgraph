@@ -1,6 +1,19 @@
-type ExampleEntity @entity {
+type MetaTransaction @entity {
   id: ID!
-  count: BigInt!
-  sender: Bytes! # address
+  sender: User!
   success: Boolean! # bool
+
+  #Gas payments
+  gasToken: Bytes!
+  gasTokenDecimal: Int!
+  gasAmount: BigDecimal!
+
+  #MEV information
+  unusedSlippageUSD: BigDecimal!
+}
+
+type User @entity {
+  id: ID!
+  metaTransactions: [MetaTransaction!] @derivedFrom(field: "sender")
+  gasPaidUSD: BigDecimal!
 }
