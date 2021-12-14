@@ -1,0 +1,26 @@
+specVersion: 0.0.1
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: ConveyorV2Router01
+    network: bsc
+    source:
+      address: "0xe4C5Cf259351d7877039CBaE0e7f92EB2Ab017EB"
+      abi: ConveyorV2Router01
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.5
+      language: wasm/assemblyscript
+      entities:
+        - MetaStatus
+        - OwnershipTransferred
+      abis:
+        - name: ConveyorV2Router01
+          file: ./abis/ConveyorV2Router01.json
+      eventHandlers:
+        - event: MetaStatus(address,bool,string)
+          handler: handleMetaStatus
+        - event: OwnershipTransferred(indexed address,indexed address)
+          handler: handleOwnershipTransferred
+      file: ./src/mapping.ts

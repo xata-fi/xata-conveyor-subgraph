@@ -1,0 +1,16 @@
+{
+  "name": "xata-bsc-conveyor",
+  "license": "UNLICENSED",
+  "scripts": {
+    "codegen": "graph codegen",
+    "build": "graph build",
+    "deploy": "graph deploy --node https://api.thegraph.com/deploy/ r2d2-rmbl/xata-bsc-conveyor",
+    "create-local": "graph create --node http://localhost:8020/ r2d2-rmbl/xata-bsc-conveyor",
+    "remove-local": "graph remove --node http://localhost:8020/ r2d2-rmbl/xata-bsc-conveyor",
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 r2d2-rmbl/xata-bsc-conveyor"
+  },
+  "dependencies": {
+    "@graphprotocol/graph-cli": "0.25.0",
+    "@graphprotocol/graph-ts": "0.24.1"
+  }
+}
