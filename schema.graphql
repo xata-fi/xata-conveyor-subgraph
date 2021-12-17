@@ -4,16 +4,46 @@ type MetaTransaction @entity {
   success: Boolean! # bool
 
   #Gas payments
-  gasToken: Bytes!
-  gasTokenDecimal: Int!
-  gasAmount: BigDecimal!
+  gasPaidUSD: BigDecimal!
 
-  #MEV information
+  #MEV information - not applicable if txn isn't a swap
+  swapInputToken: Bytes!
+  swapInputAmount: BigInt!
+  swapOutputToken: Bytes!
+  swapOutputAmount: BigInt!
   unusedSlippageUSD: BigDecimal!
 }
 
 type User @entity {
   id: ID!
   metaTransactions: [MetaTransaction!] @derivedFrom(field: "sender")
-  gasPaidUSD: BigDecimal!
+  totalGasPaidUSD: BigDecimal!
+  totalSwappedUSD: BigDecimal!
+}
+
+type XATADayMEVData @entity {
+  id: ID!
+  date: Int!
+  dailyUnusedSlippageUSD: BigDecimal!
+  dailyGasPaidUSD: BigDecimal!
+  dailySwappedUSD: BigDecimal!
+  totalUnusedSlippageUSD: BigDecimal!
+  totalGasPaidUSD: BigDecimal!
+  totalSwappedUSD: BigDecimal!
+}
+
+type XATAMEVData @entity {
+  id: ID!
+  totalUnusedSlippageUSD: BigDecimal!
+  totalGasPaidUSD: BigDecimal!
+  totalSwappedUSD: BigDecimal!
+}
+
+type UserDayData @entity {
+  id: ID!
+  date: Int!
+  dailyGasPaidUSD: BigDecimal!
+  dailySwappedUSD: BigDecimal!
+  totalGasPaidUSD: BigDecimal!
+  totalSwappedUSD: BigDecimal!
 }

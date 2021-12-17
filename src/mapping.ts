@@ -1,70 +1,63 @@
-import {Address, BigDecimal, BigInt, ethereum, log} from "@graphprotocol/graph-ts"
+import {Address, BigDecimal, BigInt, Bytes, ethereum, log} from "@graphprotocol/graph-ts"
+import { ERC20 } from '../generated/templates'
+
 import {
-  ConveyorV2Router01,
   MetaStatus,
-  OwnershipTransferred
 } from "../generated/ConveyorV2Router01/ConveyorV2Router01"
-import { MetaTransaction, User } from "../generated/schema"
+import {User, XATADayMEVData, XATAMEVData} from "../generated/schema"
 import {Transfer} from "../generated/templates/ERC20/ERC20";
+import {
+  addressEquals, FACTORY_ADDRESS,
+  getMetaTransaction,
+  getTxnInputDataToDecode,
+  getUnusedSlippageInUSD, indexTokenDataForGasTransfer, indexTokenDataForSwapTransfers, META_TXN_TYPES,
+  stripFunctionSignature
+} from "./helpers";
+import {addSlippageToDayAndTotalData} from "./updateDayData";
 
-// Compares if 2 Address or String types refer to the same address.
-function addressEquals(add1: string, add2: string): boolean {
-  return add1.toLowerCase() == add2.toLowerCase();
-}
-
-function getMetaTransaction(txnId: string): MetaTransaction {
-  let metaTxn = MetaTransaction.load(txnId)
-  if (!metaTxn) {
-    metaTxn = new MetaTransaction(txnId)
-
-    metaTxn.gasToken = Address.zero();
-    metaTxn.gasTokenDecimal = 0;
-    metaTxn.gasAmount = BigDecimal.zero();
-    metaTxn.unusedSlippageUSD = BigDecimal.zero();
-    metaTxn.sender = '';
-    metaTxn.success = false;
-  }
-  return metaTxn;
-}
+const RELAYER_ADDRESS = '0x7b2854d5b756c5d2057128682c33c83fa5fa8c60'; //May change for different networks.
 
 export function handleMetaStatus(event: MetaStatus): void {
   let metaTxn = getMetaTransaction(event.transaction.hash.toHexString());
-
-  //Set sender and meta status info
-  const originalSenderAddress = event.params.sender;
-  let sender = User.load(originalSenderAddress.toHexString());
-  if (!sender) {
-    sender = new User(originalSenderAddress.toHexString());
-    sender.gasPaidUSD = BigDecimal.zero();
-  }
-  metaTxn.sender = sender.id;
+  metaTxn.sender = event.params.sender.toHexString();
   metaTxn.success = event.params.success;
 
-  //Set decoded information within meta txn
-  const metaTxnTypes = '(tuple(address,address,uint256,uint256,uint256,bytes,bytes32),string,uint256,uint256,tuple(uint8,bytes32,bytes32))';
-  let decoded = ethereum.decode(metaTxnTypes, event.transaction.input);
-
+  const dataToDecode = getTxnInputDataToDecode(event);
+  let decoded = ethereum.decode(META_TXN_TYPES, dataToDecode);
   if (decoded) {
     const decodedTuple = decoded.toTuple();
-    log.debug('Decoded address: {}', [decodedTuple[0].toTuple()[0].toAddress().toHexString()]);
-    log.debug('Decoded domain: {}', [decodedTuple[1].toString()]);
-  } else {
-    log.debug('Unable to decode.', []);
-  }
+    let metaTxnStruct = decodedTuple[0].toTuple();
 
-  sender.save();
+    const feeTokenAddress = metaTxnStruct[1].toAddress();
+    log.debug('Decoded feeTokenAddress: {}', [feeTokenAddress.toHexString()]);
+    ERC20.create(feeTokenAddress); // Start tracking the fee token for transfers if we have not done so
+
+    const innerTxnCalldata = metaTxnStruct[5].toBytes(); // bytes from metaTransaction
+    const swapTypes = '(uint256,uint256,address[],address,uint256)';
+    const decodedInnerTxn = ethereum.decode(swapTypes, stripFunctionSignature(innerTxnCalldata));
+    if (decodedInnerTxn) {
+      const decodedSwap = decodedInnerTxn.toTuple();
+      const unusedSlippageUSD = getUnusedSlippageInUSD(decodedSwap[0].toBigInt(), decodedSwap[1].toBigInt(), metaTxn);
+      metaTxn.unusedSlippageUSD = unusedSlippageUSD;
+      addSlippageToDayAndTotalData(event, unusedSlippageUSD);
+    } else {
+      log.debug('Could not decode swap data for [{}], it may not be a swap.', [event.transaction.hash.toHexString()]);
+    }
+  } else {
+    log.debug('Unable to decode [{}] as a meta txn.', [event.transaction.hash.toHexString()]);
+  }
   metaTxn.save();
 }
 
 export function handleTransfer(event: Transfer): void {
-  if (addressEquals(event.params.to.toString(), event.transaction.from.toString())) { // if transfer is sent to relayer's address
+  let transactionSender = event.transaction.from.toHexString();
+  if (addressEquals(transactionSender, RELAYER_ADDRESS)) { // We're interested only in transactions created by relayer
     let metaTxn = getMetaTransaction(event.transaction.hash.toHexString());
-    metaTxn.gasToken = event.address;
-    metaTxn.gasAmount = event.params.value.toBigDecimal();
-    metaTxn.gasTokenDecimal = 18;
+    if (addressEquals(event.params.to.toHexString(), transactionSender)) { // if transfer is sent to relayer's address, this should be a gas payment
+      indexTokenDataForGasTransfer(event, metaTxn);
+    } else {
+      indexTokenDataForSwapTransfers(event, metaTxn);
+    }
     metaTxn.save();
-    log.debug('Saved gas info. for {}', [metaTxn.id]);
-  } else {
-    log.debug('{} is not a gas fee payment.', [event.transaction.hash.toHexString()]);
   }
 }

@@ -21,10 +21,37 @@ dataSources:
           file: ./abis/ConveyorV2Router01.json
         - name: ERC20
           file: ./abis/ERC20.json
+        - name: AggregatorV3Interface
+          file: ./abis/AggregatorV3Interface.json
+        - name: ConveyorV2Pair
+          file: ./abis/ConveyorV2Pair.json
       eventHandlers:
         - event: MetaStatus(address,bool,string)
           handler: handleMetaStatus
       file: ./src/mapping.ts
+  - kind: ethereum/contract
+    name: Factory
+    network: bsc
+    source:
+      address: '0x5f8017621825BC10D63d15C3e863f893946781F7'
+      abi: Factory
+      startBlock: 11590013
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.5
+      language: wasm/assemblyscript
+      file: ./src/factory.ts
+      entities:
+        - Pair
+        - Token
+      abis:
+        - name: Factory
+          file: ./abis/ConveyorV2Factory.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+      eventHandlers:
+        - event: PairCreated(indexed address,indexed address,address,uint256)
+          handler: handleNewPair
 templates:
   - kind: ethereum/contract
     name: ERC20
