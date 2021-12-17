@@ -16,8 +16,10 @@ import {
 import {addSlippageToDayAndTotalData} from "./updateDayData";
 
 const RELAYER_ADDRESS = '0x7b2854d5b756c5d2057128682c33c83fa5fa8c60'; //May change for different networks.
+const GAS_FEE_HOLDER = '0x1c87bfc7537bfaa397bde7d108e27819864a4e3a'; //May change for different networks.
 
 export function handleMetaStatus(event: MetaStatus): void {
+  log.debug('Handling metaStatus {}', [event.transaction.hash.toHexString()]);
   let metaTxn = getMetaTransaction(event.transaction.hash.toHexString());
   metaTxn.sender = event.params.sender.toHexString();
   metaTxn.success = event.params.success;
@@ -50,10 +52,12 @@ export function handleMetaStatus(event: MetaStatus): void {
 }
 
 export function handleTransfer(event: Transfer): void {
+  log.debug('Handling transfer {}', [event.transaction.hash.toHexString()]);
   let transactionSender = event.transaction.from.toHexString();
   if (addressEquals(transactionSender, RELAYER_ADDRESS)) { // We're interested only in transactions created by relayer
     let metaTxn = getMetaTransaction(event.transaction.hash.toHexString());
-    if (addressEquals(event.params.to.toHexString(), transactionSender)) { // if transfer is sent to relayer's address, this should be a gas payment
+    if (addressEquals(event.params.to.toHexString(), GAS_FEE_HOLDER)) { // if transfer is sent to gas fee holder's address, this should be a gas payment
+      log.debug('isGasTransfer, txn: [{}]', [event.transaction.hash.toHexString()]);
       indexTokenDataForGasTransfer(event, metaTxn);
     } else {
       indexTokenDataForSwapTransfers(event, metaTxn);

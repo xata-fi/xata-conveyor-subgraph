@@ -3,9 +3,10 @@ import { PairCreated } from '../generated/Factory/Factory'
 import {ERC20} from "../generated/templates";
 import {XATAMEVData} from "../generated/schema";
 import {FACTORY_ADDRESS} from "./helpers";
-import {BigDecimal} from "@graphprotocol/graph-ts";
+import {BigDecimal, log} from "@graphprotocol/graph-ts";
 
 export function handleNewPair(event: PairCreated): void {
+    log.debug('Handle new pair', []);
     // Initialize total stats.
     let xataTotalData = XATAMEVData.load(FACTORY_ADDRESS)
     if (xataTotalData === null) {

@@ -1,24 +1,24 @@
 import {Address, BigDecimal, BigInt, log} from "@graphprotocol/graph-ts";
 import {ERC20} from "../generated/templates/ERC20/ERC20";
 import {AggregatorV3Interface} from "../generated/ConveyorV2Router01/AggregatorV3Interface";
-import {ConveyorV2Pair} from "../generated/ConveyorV2Router01/ConveyorV2Pair";
+import {ConveyorV2Pair} from "../generated/templates/ERC20/ConveyorV2Pair";
 
 // -------- Network specific price settings ---------------- //
 const ATA_ADDRESS = Address.fromString('0xa2120b9e674d3fc3875f415a7df52e382f141225'); //Because no chainlink oracle for this.
 const ATA_USDT_PAIR = Address.fromString('0x69e7dca6d62d9152dd4e0fb3f520cd26f4bf7774');
 
-const priceCache = new Map<Address, BigDecimal>();
-priceCache.set(Address.fromString('0x55d398326f99059ff775485246999027b3197955'), BigDecimal.fromString('1')); // USDT
-priceCache.set(Address.fromString('0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'), BigDecimal.fromString('1')); // USDC
-priceCache.set(Address.fromString('0xe9e7cea3dedca5984780bafc599bd69add087d56'), BigDecimal.fromString('1')); // BUSD
+const priceCache = new Map<string, BigDecimal>();
+priceCache.set('0x55d398326f99059ff775485246999027b3197955'.toLowerCase(), BigDecimal.fromString('1')); // USDT
+priceCache.set('0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'.toLowerCase(), BigDecimal.fromString('1')); // USDC
+priceCache.set('0xe9e7cea3dedca5984780bafc599bd69add087d56'.toLowerCase(), BigDecimal.fromString('1')); // BUSD
 
 const chainlinkOracleMap = new Map<Address,Address>();
 chainlinkOracleMap.set(Address.fromString('0x3ee2200efb3400fabb9aacf31297cbdd1d435d47'), Address.fromString('0xa767f745331D267c7751297D982b050c93985627')); // ADA
-chainlinkOracleMap.set(Address.fromString('0x8fF795a6F4D97E7887C79beA79aba5cc76444aD'), Address.fromString('0x43d80f616DAf0b0B42a928EeD32147dC59027D41')); // BCH
+chainlinkOracleMap.set(Address.fromString('0x8fF795a6F4D97E7887C79beA79aba5cc76444aDf'), Address.fromString('0x43d80f616DAf0b0B42a928EeD32147dC59027D41')); // BCH
 chainlinkOracleMap.set(Address.fromString('0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82'), Address.fromString('0xB6064eD41d4f67e353768aA239cA86f4F73665a1')); // CAKE
-chainlinkOracleMap.set(Address.fromString('0x1af3f329e8be154074d8769d1ffa4ee058b1dbc'), Address.fromString('0x132d3C0B1D2cEa0BC552588063bdBb210FDeecfA')); // DAI
-chainlinkOracleMap.set(Address.fromString('0xba2ae424d960c26247dd6c32edc70b295c744c4'), Address.fromString('0x3AB0A0d137D4F946fBB19eecc6e92E64660231C8')); // DOGE
-chainlinkOracleMap.set(Address.fromString('0x7083609fce4d1d8dc0c979aab8c869ea2c87340'), Address.fromString('0xC333eb0086309a16aa7c8308DfD32c8BBA0a2592')); // DOT
+chainlinkOracleMap.set(Address.fromString('0x1af3f329e8be154074d8769d1ffa4ee058b1dbc3'), Address.fromString('0x132d3C0B1D2cEa0BC552588063bdBb210FDeecfA')); // DAI
+chainlinkOracleMap.set(Address.fromString('0xba2ae424d960c26247dd6c32edc70b295c744c43'), Address.fromString('0x3AB0A0d137D4F946fBB19eecc6e92E64660231C8')); // DOGE
+chainlinkOracleMap.set(Address.fromString('0x7083609fce4d1d8dc0c979aab8c869ea2c873402'), Address.fromString('0xC333eb0086309a16aa7c8308DfD32c8BBA0a2592')); // DOT
 chainlinkOracleMap.set(Address.fromString('0x2170ed0880ac9a755fd29b2688956bd959f933f8'), Address.fromString('0x9ef1B8c0E4F7dc8bF5719Ea496883DC6401d5b2e')); // ETH
 chainlinkOracleMap.set(Address.fromString('0x0d8ce2a99bb6e3b7db580ed848240e4a0f9ae153'), Address.fromString('0xE5dbFD9003bFf9dF5feB2f4F445Ca00fb121fb83')); // FIL
 chainlinkOracleMap.set(Address.fromString('0xf8a0bf9cf54bb92f17374d9e9a321e6a111a51bd'), Address.fromString('0xca236E327F629f9Fc2c30A4E95775EbF0B89fac8')); // LINK
@@ -46,37 +46,45 @@ function getPriceFromPairWithUSDBase(tokenAddress: Address, pairAddress: Address
     return BigDecimal.zero();
 }
 
+function getValueFromPriceAndToken(price: BigDecimal, amount: BigInt, tokenAddress: Address): BigDecimal {
+    const undividedValue = price.times(amount.toBigDecimal());
+    const tokenContract = ERC20.bind(tokenAddress);
+    const tokenDecimals = BigInt.fromI32(10).pow(u8(tokenContract.decimals())).toBigDecimal();
+    return undividedValue.div(tokenDecimals);
+}
+
 // Given a token address and amount denominated in the token's decimal value, get the USD value
 export function getTokenUSDValue(tokenAddress: Address, amount: BigInt): BigDecimal {
-
+    const tokenAddressStr = tokenAddress.toHexString().toLowerCase();
     // See if we already know the price
-    if (priceCache.has(tokenAddress)) {
-        return priceCache.get(tokenAddress);
+    if (priceCache.has(tokenAddressStr)) {
+        log.debug('price cache hit for {}', [tokenAddressStr]);
+        const price = priceCache.get(tokenAddressStr);
+        return getValueFromPriceAndToken(price, amount, tokenAddress);
     }
 
     // Default handling for ATA
     if (tokenAddress.toHexString() == ATA_ADDRESS.toHexString()) {
+        log.debug('Checking ATA price.', []);
         const ataPrice = getPriceFromPairWithUSDBase(ATA_ADDRESS, ATA_USDT_PAIR);
-        const undividedValue = ataPrice.times(amount.toBigDecimal());
-        const tokenContract = ERC20.bind(tokenAddress);
-        const tokenDecimals = BigInt.fromI32(10 ** tokenContract.decimals());
-        const usdValue = undividedValue.div(tokenDecimals.toBigDecimal());
-        priceCache.set(tokenAddress, usdValue);
-        return usdValue;
+        priceCache.set(tokenAddressStr, ataPrice);
+        log.debug('ataPrice: {}.', [ataPrice.toString()]);
+        return getValueFromPriceAndToken(ataPrice, amount, tokenAddress);
     }
 
     // Handling using chainlink
     if (chainlinkOracleMap.has(tokenAddress)) {
+        log.debug('Checking using chainlink.', []);
         const oracleAddress = chainlinkOracleMap.get(tokenAddress);
         const priceOracle = AggregatorV3Interface.bind(oracleAddress);
-        const undividedValue = priceOracle.latestRoundData().value1.times(amount).toBigDecimal();
+        let price = priceOracle.latestRoundData().value1.toBigDecimal();
+        priceCache.set(tokenAddressStr, price);
+        const undividedValue = price.times(amount.toBigDecimal());
         const tokenContract = ERC20.bind(tokenAddress);
         const tokenDecimals = BigInt.fromI32(10 ** tokenContract.decimals());
-        const usdValue = undividedValue.div(tokenDecimals.toBigDecimal()).div(CHAINLINK_DECIMAL);
-        priceCache.set(tokenAddress, usdValue);
-        return usdValue;
+        return undividedValue.div(tokenDecimals.toBigDecimal()).div(CHAINLINK_DECIMAL);
     }
 
-    log.debug('Unable to find token price for [{}]. Returning 0 value.', [tokenAddress.toHexString()]);
+    log.debug('Unable to find token price for [{}]. Returning 0 value.', [tokenAddressStr]);
     return BigDecimal.zero();
 }
