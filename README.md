@@ -13,3 +13,13 @@ This is the source code for the subgraph hosted at:
 |BSC|https://thegraph.com/hosted-service/subgraph/r2d2-rmbl/xata-bsc-conveyor|
 |MATIC|TBC|
 
+## Network specific settings
+1. subgraph.yaml (search for 'network')
+2. package.json (check 'deploy' command)
+3. Hard-coded addresses in various .ts files.
+
+
+## Deploying the subgraph
+1. `yarn install`
+2. `yarn codegen`
+3. `yarn deploy`

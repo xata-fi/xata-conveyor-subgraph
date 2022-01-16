@@ -4,29 +4,44 @@ import {AggregatorV3Interface} from "../generated/ConveyorV2Router01/AggregatorV
 import {ConveyorV2Pair} from "../generated/templates/ERC20/ConveyorV2Pair";
 
 // -------- Network specific price settings ---------------- //
-const ATA_ADDRESS = Address.fromString('0xa2120b9e674d3fc3875f415a7df52e382f141225'); //Because no chainlink oracle for this.
-const ATA_USDT_PAIR = Address.fromString('0x69e7dca6d62d9152dd4e0fb3f520cd26f4bf7774');
+const ATA_ADDRESS = Address.fromString('0x0df0f72ee0e5c9b7ca761ecec42754992b2da5bf'); //Because no chainlink oracle for this.
+const ATA_USDT_PAIR = Address.fromString('0x28ccC6a15a2e6FA8C09cdDE9795417E8a9cD6edC');
 
 const priceCache = new Map<string, BigDecimal>();
-priceCache.set('0x55d398326f99059ff775485246999027b3197955'.toLowerCase(), BigDecimal.fromString('1')); // USDT
-priceCache.set('0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'.toLowerCase(), BigDecimal.fromString('1')); // USDC
-priceCache.set('0xe9e7cea3dedca5984780bafc599bd69add087d56'.toLowerCase(), BigDecimal.fromString('1')); // BUSD
+priceCache.set('0xc2132d05d31c914a87c6611c10748aeb04b58e8f'.toLowerCase(), BigDecimal.fromString('1')); // USDT
+priceCache.set('0x2791bca1f2de4661ed88a30c99a7a9449aa84174'.toLowerCase(), BigDecimal.fromString('1')); // USDC
+priceCache.set('0xdab529f40e671a1d4bf91361c21bf9f0c9712ab7'.toLowerCase(), BigDecimal.fromString('1')); // BUSD
 
 const chainlinkOracleMap = new Map<Address,Address>();
-chainlinkOracleMap.set(Address.fromString('0x3ee2200efb3400fabb9aacf31297cbdd1d435d47'), Address.fromString('0xa767f745331D267c7751297D982b050c93985627')); // ADA
-chainlinkOracleMap.set(Address.fromString('0x8fF795a6F4D97E7887C79beA79aba5cc76444aDf'), Address.fromString('0x43d80f616DAf0b0B42a928EeD32147dC59027D41')); // BCH
-chainlinkOracleMap.set(Address.fromString('0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82'), Address.fromString('0xB6064eD41d4f67e353768aA239cA86f4F73665a1')); // CAKE
-chainlinkOracleMap.set(Address.fromString('0x1af3f329e8be154074d8769d1ffa4ee058b1dbc3'), Address.fromString('0x132d3C0B1D2cEa0BC552588063bdBb210FDeecfA')); // DAI
-chainlinkOracleMap.set(Address.fromString('0xba2ae424d960c26247dd6c32edc70b295c744c43'), Address.fromString('0x3AB0A0d137D4F946fBB19eecc6e92E64660231C8')); // DOGE
-chainlinkOracleMap.set(Address.fromString('0x7083609fce4d1d8dc0c979aab8c869ea2c873402'), Address.fromString('0xC333eb0086309a16aa7c8308DfD32c8BBA0a2592')); // DOT
-chainlinkOracleMap.set(Address.fromString('0x2170ed0880ac9a755fd29b2688956bd959f933f8'), Address.fromString('0x9ef1B8c0E4F7dc8bF5719Ea496883DC6401d5b2e')); // ETH
-chainlinkOracleMap.set(Address.fromString('0x0d8ce2a99bb6e3b7db580ed848240e4a0f9ae153'), Address.fromString('0xE5dbFD9003bFf9dF5feB2f4F445Ca00fb121fb83')); // FIL
-chainlinkOracleMap.set(Address.fromString('0xf8a0bf9cf54bb92f17374d9e9a321e6a111a51bd'), Address.fromString('0xca236E327F629f9Fc2c30A4E95775EbF0B89fac8')); // LINK
-chainlinkOracleMap.set(Address.fromString('0x4338665cbb7b2485a8855a139b75d5e34ab0db94'), Address.fromString('0x74E72F37A8c415c8f1a98Ed42E78Ff997435791D')); // LTC
-chainlinkOracleMap.set(Address.fromString('0xcc42724c6683b7e57334c4e856f4c9965ed682bd'), Address.fromString('0x7CA57b0cA6367191c94C8914d7Df09A57655905f')); // MATIC
-chainlinkOracleMap.set(Address.fromString('0x947950BcC74888a40Ffa2593C5798F11Fc9124C4'), Address.fromString('0xa679C72a97B654CFfF58aB704de3BA15Cde89B07')); // SUSHI
-chainlinkOracleMap.set(Address.fromString('0xbf5140a22578168fd562dccf235e5d43a02ce9b1'), Address.fromString('0xb57f259E7C24e56a1dA00F66b55A5640d9f9E7e4')); // UNI
-chainlinkOracleMap.set(Address.fromString('0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c'), Address.fromString('0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE')); // WBNB
+chainlinkOracleMap.set(Address.fromString('0x9c2c5fd7b07e95ee044ddeba0e97a665f142394f'), Address.fromString('0x443C5116CdF663Eb387e72C688D276e702135C87')); // 1INCH
+chainlinkOracleMap.set(Address.fromString('0x95c300e7740d2a88a44124b424bfc1cb2f9c3b89'), Address.fromString('0x5DB6e61B6159B20F068dc15A47dF2E5931b14f29')); // ALCX
+chainlinkOracleMap.set(Address.fromString('0x334d7ae7f1d21ceb74537391558ce57bbf3ccf73'), Address.fromString('0x9c371aE34509590E10aB98205d2dF5936A1aD875')); // AXS
+chainlinkOracleMap.set(Address.fromString('0x9a71012b13ca4d3d0cdc72a177df3ef03b0e76a3'), Address.fromString('0xD106B538F2A868c28Ca1Ec7E298C3325E0251d66')); // BAL
+chainlinkOracleMap.set(Address.fromString('0x3cef98bb43d732e2f285ee605a8158cde967d219'), Address.fromString('0x2346Ce62bd732c62618944E51cbFa09D985d86D2')); // BAT
+chainlinkOracleMap.set(Address.fromString('0x3BA4c387f786bFEE076A58914F5Bd38d668B42c3'), Address.fromString('0x82a6c4AF830caa6c97bb504425f6A66165C2c26e')); // BNB
+chainlinkOracleMap.set(Address.fromString('0xc26d47d5c33ac71ac5cf9f776d63ba292a4f7842'), Address.fromString('0xF5724884b6E99257cC003375e6b844bC776183f9')); // BNT
+chainlinkOracleMap.set(Address.fromString('0xdab529f40e671a1d4bf91361c21bf9f0c9712ab7'), Address.fromString('0xE0dC07D5ED74741CeeDA61284eE56a2A0f7A4Cc9')); // BUSD
+chainlinkOracleMap.set(Address.fromString('0x8505b9d2254a7ae468c0e9dd10ccea3a837aef5c'), Address.fromString('0x2A8758b7257102461BC958279054e372C2b1bDE6')); // COMP
+chainlinkOracleMap.set(Address.fromString('0x172370d5cd63279efa6d502dab29171933a610af'), Address.fromString('0x336584C8E6Dc19637A5b36206B1c79923111b405')); // CRV
+chainlinkOracleMap.set(Address.fromString('0x8f3cf7ad23cd3cadbd9735aff958023239c6a063'), Address.fromString('0x4746DeC9e833A82EC7C2C1356372CcF2cfcD2F3D')); // DAI
+chainlinkOracleMap.set(Address.fromString('0x7ec26842f195c852fa843bb9f6d8b583a274a157'), Address.fromString('0x440A341bbC9FA86aA60A195e2409a547e48d4C0C')); // ENJ
+chainlinkOracleMap.set(Address.fromString('0x7ceb23fd6bc0add59e62ac25578270cff1b9f619'), Address.fromString('0xF9680D99D6C9589e2a93a78A04A279e509205945')); // WETH
+chainlinkOracleMap.set(Address.fromString('0x385eeac5cb85a38a9a07a70c73e0a3271cfb54a7'), Address.fromString('0xDD229Ce42f11D8Ee7fFf29bDB71C7b81352e11be')); // GHST
+chainlinkOracleMap.set(Address.fromString('0x5fe2b58c013d7601147dcdd68c143a77499f5531'), Address.fromString('0x3FabBfb300B1e2D7c9B84512fe9D30aeDF24C410')); // GRT
+chainlinkOracleMap.set(Address.fromString('0x53e0bca35ec356bd5dddfebbd1fc0fd03fabad39'), Address.fromString('0xd9FFdb71EbE7496cC440152d43986Aae0AB76665')); // LINK
+chainlinkOracleMap.set(Address.fromString('0xa1c57f48f0deb89f569dfbe6e2b7f46d33606fd4'), Address.fromString('0xA1CbF3Fe43BC3501e3Fc4b573e822c70e76A7512')); // MANA
+chainlinkOracleMap.set(Address.fromString('0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270'), Address.fromString('0xAB594600376Ec9fD91F8e885dADF0CE036862dE0')); // MATIC
+chainlinkOracleMap.set(Address.fromString('0x831753dd7087cac61ab5644b308642cc1c33dc13'), Address.fromString('0xa058689f4bCa95208bba3F265674AE95dED75B6D')); // QUICK
+chainlinkOracleMap.set(Address.fromString('0xBbba073C31bF03b8ACf7c28EF0738DeCF3695683'), Address.fromString('0x3D49406EDd4D52Fb7FFd25485f32E073b529C924')); // SAND
+chainlinkOracleMap.set(Address.fromString('0x50b728d8d964fd00c2d0aad81718b71311fef68a'), Address.fromString('0xbF90A5D9B6EE9019028dbFc2a9E50056d5252894')); // SNX
+chainlinkOracleMap.set(Address.fromString('0x0b3f868e0be5597d5db7feb59e1cadbb0fdda50a'), Address.fromString('0x49B0c695039243BBfEb8EcD054EB70061fd54aa0')); // SUSHI
+chainlinkOracleMap.set(Address.fromString('0x2e1ad108ff1d8c782fcbbb89aad783ac49586756'), Address.fromString('0x7C5D415B64312D38c56B54358449d0a4058339d2')); // TUSD
+chainlinkOracleMap.set(Address.fromString('0xb33eaad8d922b1083446dc23f610c2567fb5180f'), Address.fromString('0xdf0Fb4e4F928d2dCB76f438575fDD8682386e13C')); // UNI
+chainlinkOracleMap.set(Address.fromString('0x2791bca1f2de4661ed88a30c99a7a9449aa84174'), Address.fromString('0xfE4A8cc5b5B2366C1B58Bea3858e81843581b2F7')); // USDC
+chainlinkOracleMap.set(Address.fromString('0xc2132d05d31c914a87c6611c10748aeb04b58e8f'), Address.fromString('0x0A6513e40db6EB1b165753AD52E80663aeA50545')); // USDT
+chainlinkOracleMap.set(Address.fromString('0x1bfd67037b42cf73acf2047067bd4f2c47d9bfd6'), Address.fromString('0xDE31F8bFBD8c84b5360CFACCa3539B938dd78ae6')); // WBTC
+chainlinkOracleMap.set(Address.fromString('0xda537104d6a5edd53c6fbba9a898708e465260b6'), Address.fromString('0x9d3A43c111E7b2C6601705D9fcF7a70c95b1dc55')); // YFI
+chainlinkOracleMap.set(Address.fromString('0x5559edb74751a0ede9dea4dc23aee72cca6be3d5'), Address.fromString('0x6EA4d89474d9410939d429B786208c74853A5B47')); // ZRX
 
 const CHAINLINK_DECIMAL = BigDecimal.fromString('100000000'); //10e8
 

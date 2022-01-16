@@ -4,7 +4,7 @@ schema:
 dataSources:
   - kind: ethereum
     name: ConveyorV2Router01
-    network: bsc
+    network: matic
     source:
       address: "0xe4C5Cf259351d7877039CBaE0e7f92EB2Ab017EB"
       abi: ConveyorV2Router01
@@ -31,7 +31,7 @@ dataSources:
       file: ./src/mapping.ts
   - kind: ethereum/contract
     name: Factory
-    network: bsc
+    network: matic
     source:
       address: '0x5f8017621825BC10D63d15C3e863f893946781F7'
       abi: Factory
@@ -55,7 +55,7 @@ dataSources:
 templates:
   - kind: ethereum/contract
     name: ERC20
-    network: bsc
+    network: matic
     source:
       abi: ERC20
     mapping:
